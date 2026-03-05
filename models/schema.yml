@@ -1,0 +1,246 @@
+version: 2
+
+models:
+  # ---------------------------------------------------------------------------
+  # Staging: fuentes crudas por ciudad
+  # ---------------------------------------------------------------------------
+  - name: stg_clima_py__forecast_asuncion
+    description: "Vista staging del pronóstico horario de Open-Meteo para Asunción."
+    columns:
+      - name: city_name
+        description: "Nombre fijo de la ciudad (Asunción)."
+      - name: hourly
+        description: "Payload JSON con series horarias (tiempos y métricas meteorológicas)."
+      - name: latitude
+        description: "Latitud reportada por la API de Open-Meteo."
+      - name: longitude
+        description: "Longitud reportada por la API de Open-Meteo."
+      - name: timezone
+        description: "Zona horaria IANA usada para las marcas de tiempo."
+      - name: timezone_abbreviation
+        description: "Abreviatura de la zona horaria (p. ej. LMT, -03)."
+      - name: utc_offset_seconds
+        description: "Offset respecto a UTC en segundos."
+      - name: elevation
+        description: "Altitud del punto de medición según Open-Meteo."
+      - name: generationtime_ms
+        description: "Tiempo de generación de la respuesta en el servidor de Open-Meteo (ms)."
+      - name: extracted_at
+        description: "Timestamp en que el dato fue extraído por el pipeline."
+
+  - name: stg_clima_py__forecast_cde
+    description: "Vista staging del pronóstico horario de Open-Meteo para Ciudad del Este."
+    columns:
+      - name: city_name
+        description: "Nombre fijo de la ciudad (Ciudad del Este)."
+      - name: hourly
+        description: "Payload JSON con series horarias (tiempos y métricas meteorológicas)."
+      - name: latitude
+        description: "Latitud reportada por la API de Open-Meteo."
+      - name: longitude
+        description: "Longitud reportada por la API de Open-Meteo."
+      - name: timezone
+        description: "Zona horaria IANA usada para las marcas de tiempo."
+      - name: timezone_abbreviation
+        description: "Abreviatura de la zona horaria (p. ej. LMT, -03)."
+      - name: utc_offset_seconds
+        description: "Offset respecto a UTC en segundos."
+      - name: elevation
+        description: "Altitud del punto de medición según Open-Meteo."
+      - name: generationtime_ms
+        description: "Tiempo de generación de la respuesta en el servidor de Open-Meteo (ms)."
+      - name: extracted_at
+        description: "Timestamp en que el dato fue extraído por el pipeline."
+
+  - name: stg_clima_py__forecast_encarnacion
+    description: "Vista staging del pronóstico horario de Open-Meteo para Encarnación."
+    columns:
+      - name: city_name
+        description: "Nombre fijo de la ciudad (Encarnación)."
+      - name: hourly
+        description: "Payload JSON con series horarias (tiempos y métricas meteorológicas)."
+      - name: latitude
+        description: "Latitud reportada por la API de Open-Meteo."
+      - name: longitude
+        description: "Longitud reportada por la API de Open-Meteo."
+      - name: timezone
+        description: "Zona horaria IANA usada para las marcas de tiempo."
+      - name: timezone_abbreviation
+        description: "Abreviatura de la zona horaria (p. ej. LMT, -03)."
+      - name: utc_offset_seconds
+        description: "Offset respecto a UTC en segundos."
+      - name: elevation
+        description: "Altitud del punto de medición según Open-Meteo."
+      - name: generationtime_ms
+        description: "Tiempo de generación de la respuesta en el servidor de Open-Meteo (ms)."
+      - name: extracted_at
+        description: "Timestamp en que el dato fue extraído por el pipeline."
+
+  # ---------------------------------------------------------------------------
+  # Intermedios: normalización y desanidado
+  # ---------------------------------------------------------------------------
+  - name: int_clima_py__forecast_union
+    description: "Union de los pronósticos brutos de las tres ciudades en una única tabla homogénea."
+    columns:
+      - name: city_name
+        description: "Ciudad a la que pertenece el pronóstico horario."
+      - name: hourly
+        description: "Payload JSON con la serie horaria completa de la ciudad."
+      - name: latitude
+        description: "Latitud de la ciudad según Open-Meteo."
+      - name: longitude
+        description: "Longitud de la ciudad según Open-Meteo."
+      - name: timezone
+        description: "Zona horaria IANA usada para las marcas de tiempo."
+      - name: extracted_at
+        description: "Timestamp en que el lote de datos fue extraído."
+
+  - name: int_clima_py__weather_hourly
+    description: "Tabla intermedia con un registro por ciudad y hora, desanidando el JSON horario."
+    columns:
+      - name: city_name
+        description: "Ciudad a la que corresponde la observación."
+      - name: time_ts
+        description: "Marca de tiempo de la observación (a nivel de hora)."
+      - name: temperature_2m
+        description: "Temperatura del aire a 2 metros de altura (°C)."
+      - name: relative_humidity_2m
+        description: "Humedad relativa a 2 metros de altura (%)."
+      - name: precipitation
+        description: "Precipitación acumulada para la hora dada (mm)."
+      - name: wind_speed_10m
+        description: "Velocidad del viento a 10 metros de altura (km/h o m/s según API)."
+      - name: latitude
+        description: "Latitud de la ciudad."
+      - name: longitude
+        description: "Longitud de la ciudad."
+      - name: timezone
+        description: "Zona horaria IANA usada para interpretar `time_ts`."
+      - name: extracted_at
+        description: "Timestamp en que el lote de datos fue extraído."
+
+  # ---------------------------------------------------------------------------
+  # Dimensiones y hechos
+  # ---------------------------------------------------------------------------
+  - name: dim_time
+    description: "Dimensión de tiempo a nivel de hora, derivada de las observaciones horarias."
+    columns:
+      - name: time_key
+        description: "Llave surrogate estable por hora en formato YYYYMMDDHH."
+        tests:
+          - unique
+          - not_null
+      - name: time_ts
+        description: "Marca de tiempo exacta de la hora."
+      - name: date
+        description: "Fecha (parte de día) derivada de `time_ts`."
+      - name: year
+        description: "Año calendario derivado de `time_ts`."
+      - name: month
+        description: "Mes calendario (1–12) derivado de `time_ts`."
+      - name: day
+        description: "Día del mes derivado de `time_ts`."
+      - name: hour
+        description: "Hora del día (0–23) derivada de `time_ts`."
+      - name: day_of_week
+        description: "Día de la semana (0=domingo, 6=sábado según la base)."
+
+  - name: dim_location
+    description: "Dimensión de ubicaciones para las ciudades soportadas por el modelo."
+    columns:
+      - name: location_key
+        description: "Llave surrogate de la ubicación."
+        tests:
+          - unique
+          - not_null
+      - name: city_name
+        description: "Nombre de la ciudad (Asunción, Ciudad del Este, Encarnación, etc.)."
+      - name: latitude
+        description: "Latitud promedio de la ciudad a partir de las observaciones."
+      - name: longitude
+        description: "Longitud promedio de la ciudad a partir de las observaciones."
+      - name: timezone
+        description: "Zona horaria representativa de la ciudad."
+
+  - name: fact_weather_hourly
+    description: "Tabla de hechos de clima por ubicación y hora, uniendo dimensiones de tiempo y ubicación."
+    columns:
+      - name: location_key
+        description: "Llave foránea a `dim_location.location_key`."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_location')
+                field: location_key
+
+      - name: time_key
+        description: "Llave foránea a `dim_time.time_key`."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_time')
+                field: time_key
+
+      - name: temperature_2m
+        description: "Temperatura del aire a 2 metros de altura (°C)."
+        tests:
+          # dbt-expectations
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: -80
+                max_value: 60
+          - dbt_expectations.expect_column_values_to_not_be_null
+
+      - name: relative_humidity_2m
+        description: "Humedad relativa a 2 metros de altura (%)."
+
+      - name: precipitation
+        description: "Precipitación acumulada para la hora dada (mm)."
+        tests:
+          # dbt-expectations
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 1000
+
+      - name: wind_speed_10m
+        description: "Velocidad del viento a 10 metros de altura (km/h o m/s según API)."
+
+      - name: extracted_at
+        description: "Timestamp en que el lote de datos original fue extraído."
+
+  - name: obt_weather_hourly
+    description: "Tabla de salida orientada a analistas, con clima horario por ciudad y columnas derivadas de tiempo."
+    columns:
+      - name: city_name
+        description: "Ciudad a la que corresponde la observación."
+      - name: time_ts
+        description: "Marca de tiempo de la observación (a nivel de hora)."
+      - name: date
+        description: "Fecha (parte de día) de la observación."
+      - name: year
+        description: "Año calendario de la observación."
+      - name: month
+        description: "Mes calendario de la observación."
+      - name: day
+        description: "Día del mes de la observación."
+      - name: hour
+        description: "Hora del día (0–23) de la observación."
+      - name: temperature_2m
+        description: "Temperatura del aire a 2 metros de altura (°C)."
+      - name: relative_humidity_2m
+        description: "Humedad relativa a 2 metros de altura (%)."
+      - name: precipitation
+        description: "Precipitación acumulada para la hora dada (mm)."
+      - name: wind_speed_10m
+        description: "Velocidad del viento a 10 metros de altura (km/h o m/s según API)."
+      - name: latitude
+        description: "Latitud de la ciudad."
+      - name: longitude
+        description: "Longitud de la ciudad."
+      - name: timezone
+        description: "Zona horaria IANA usada para interpretar `time_ts`."
+      - name: extracted_at
+        description: "Timestamp en que el lote de datos original fue extraído."

@@ -2,6 +2,9 @@
 target/
 logs/
 
+# dbt dependencies
+dbt_packages/
+
 # dbt user local files
 *.user.yml
 
