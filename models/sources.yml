@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: clima_py
+    schema: main
+    tables:
+      - name: forecast_asuncion
+      - name: forecast_cde
+      - name: forecast_encarnacion
