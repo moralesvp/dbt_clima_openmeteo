@@ -2,7 +2,7 @@
 
 with t as (
   select distinct time_ts
-  from {{ ref('stg_weather_hourly') }}
+  from {{ ref('int_clima_py__weather_hourly') }}
 )
 
 select

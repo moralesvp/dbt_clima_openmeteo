@@ -25,4 +25,4 @@ select
 
   -- metadata
   extracted_at
-from {{ ref('stg_weather_hourly') }}
+from {{ ref('int_clima_py__weather_hourly') }}

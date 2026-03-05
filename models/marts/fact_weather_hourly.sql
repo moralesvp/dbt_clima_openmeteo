@@ -12,7 +12,7 @@ select
 
   -- metadata
   s.extracted_at
-from {{ ref('stg_weather_hourly') }} s
+from {{ ref('int_clima_py__weather_hourly') }} s
 join {{ ref('dim_location') }} l
   on l.city_name = s.city_name
 join {{ ref('dim_time') }} t

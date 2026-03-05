@@ -8,7 +8,7 @@ with base as (
     longitude,
     timezone,
     extracted_at
-  from {{ ref('stg_openmeteo_union') }}
+  from {{ ref('int_clima_py__forecast_union') }}
 ),
 
 idx as (
@@ -18,8 +18,11 @@ idx as (
   from base b,
   range(
     0::bigint,
-    cast(json_array_length(json_extract(b.hourly, '$.time')) as bigint)
-) as t(i)
+    coalesce(
+      cast(json_array_length(json_extract(b.hourly, '$.time')) as bigint),
+      0::bigint
+    )
+  ) as t(i)
 )
 
 select

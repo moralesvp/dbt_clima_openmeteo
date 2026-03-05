@@ -6,5 +6,5 @@ select
   avg(latitude)  as latitude,
   avg(longitude) as longitude,
   any_value(timezone) as timezone
-from {{ ref('stg_weather_hourly') }}
+from {{ ref('int_clima_py__weather_hourly') }}
 group by city_name
