@@ -1,0 +1,11 @@
+clima_openmeteo:
+  target: dev
+
+  outputs:
+    dev:
+      type: duckdb
+      schema: main
+      path: "md:clima_py?motherduck_token={{ env_var('MOTHERDUCK_TOKEN') }}"
+      threads: 4
+      extensions:
+        - motherduck
